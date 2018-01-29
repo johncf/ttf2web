@@ -69,7 +69,11 @@ def main(fontfile, assetdir="assets", subsetfile=None, cssfile=None, fontstyle=N
         print("Generated", cssfile)
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print("Usage:", sys.argv[0], "font-file.ttf", file=sys.stdout)
-        sys.exit(1)
-    main(sys.argv[1])
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("fontfile", type=str,
+                        help="ttf file to split into woff2 files")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="print more details")
+    args = parser.parse_args()
+    main(args.fontfile, verbose=args.verbose)
