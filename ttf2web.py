@@ -2,26 +2,33 @@
 
 import os
 import sys
-from fontTools import ttLib
-from subprocess import Popen
+from fontTools.ttLib import TTFont
+from fontTools.subset import parse_unicodes, Subsetter
 
 def readSubsetFile(subsetfile):
     subsets = []
     with open(subsetfile, 'r') as subsethandle:
         for line in subsethandle:
-            subset = line.split()
-            if len(subset) == 2:
-                subsets.append(subset)
-            elif len(subset) > 0:
-                raise Exception('A line with ' + len(subset) + ' fields found (expected 2) in the subset file')
+            subname, subrange = line.split()
+            unicodes = parse_unicodes(subrange)
+            subsets.append((subname, subrange, unicodes))
     return subsets
 
 def getDefaultSubsets():
     subsetfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'subsets')
     return readSubsetFile(subsetfile)
 
+def writeCssFont(handle, fontfamily, url, unicoderange, fontstyle='normal', fontweight='400'):
+    print('@font-face {', file=handle)
+    print('  font-family: "' + fontfamily + '";', file=handle)
+    print('  font-style: ' + fontstyle + ';', file=handle)
+    print('  font-weight: ' + fontweight + ';', file=handle)
+    print('  src: local("' + fontfamily + '"), url(' + url + ') format("woff2");', file=handle)
+    print('  unicode-range: ' + unicoderange + ';', file=handle)
+    print('}', file=handle)
+
 def main(fontfile, assetdir="assets", subsetfile=None, cssfile=None, fontstyle=None, fontweight=None):
-    font = ttLib.TTFont(fontfile)
+    font = TTFont(fontfile, lazy=True)
     fontfamily = font['name'].getDebugName(1)
     subfamily = font['name'].getDebugName(2)
     font.close()
@@ -38,23 +45,24 @@ def main(fontfile, assetdir="assets", subsetfile=None, cssfile=None, fontstyle=N
         cssfile = basename + '.css'
     with open(cssfile, 'w') as csshandle:
         os.makedirs(assetdir, exist_ok=True)
-        print("Generating WebFonts...")
-        for charset, unicodes in subsets:
-            outfile = os.path.join(assetdir, basename + "." + charset + ".woff2")
-            print(outfile)
-            p = Popen(['pyftsubset', fontfile,
-                       '--unicodes=' + unicodes,
-                       '--output-file=' + outfile,
-                       '--flavor=woff2'], stdout=sys.stdout, stderr=sys.stderr)
-            p.communicate()
-            print('/* ' + charset + ' */', file=csshandle)
-            print('@font-face {', file=csshandle)
-            print('  font-family: "' + fontfamily + '";', file=csshandle)
-            print('  font-style: "' + fontstyle + '";', file=csshandle)
-            print('  font-weight: "' + fontweight + '";', file=csshandle)
-            print('  src: local("' + fontfamily + '"), url(' + outfile + ') format("woff2");', file=csshandle)
-            print('  unicode-range: ' + unicodes + ';', file=csshandle)
-            print('}\n', file=csshandle)
+        for subname, subrange, unicodes in subsets:
+            outfile = os.path.join(assetdir, basename + "." + subname + ".woff2")
+            print("Generating", outfile)
+            subs = Subsetter()
+            font = TTFont(fontfile)
+            subs.populate(unicodes=unicodes)
+            subs.subset(font)
+            cmap = font.getBestCmap()
+            if cmap:
+                glyphcount = len(font.getGlyphOrder()) - 1
+                print("  " + (str(glyphcount) + " glyphs;").ljust(14),
+                      "Unicodes mapped:", len(cmap), "out of", len(unicodes))
+                font.flavor = 'woff2'
+                font.save(outfile)
+                writeCssFont(csshandle, fontfamily, outfile, subrange, fontstyle, fontweight)
+            else:
+                print("  Skipped since no unicodes could be mapped.")
+            font.close()
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
