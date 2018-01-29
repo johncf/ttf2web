@@ -27,7 +27,7 @@ def writeCssFont(handle, fontfamily, url, unicoderange, fontstyle='normal', font
     print('  unicode-range: ' + unicoderange + ';', file=handle)
     print('}', file=handle)
 
-def main(fontfile, assetdir="assets", subsetfile=None, cssfile=None, fontstyle=None, fontweight=None):
+def main(fontfile, assetdir="assets", subsetfile=None, cssfile=None, fontstyle=None, fontweight=None, verbose=False):
     font = TTFont(fontfile, lazy=True)
     fontfamily = font['name'].getDebugName(1)
     subfamily = font['name'].getDebugName(2)
@@ -47,22 +47,26 @@ def main(fontfile, assetdir="assets", subsetfile=None, cssfile=None, fontstyle=N
         os.makedirs(assetdir, exist_ok=True)
         for subname, subrange, unicodes in subsets:
             outfile = os.path.join(assetdir, basename + "." + subname + ".woff2")
-            print("Generating", outfile)
+            if verbose: print("Processing", subname)
             subs = Subsetter()
             font = TTFont(fontfile)
             subs.populate(unicodes=unicodes)
             subs.subset(font)
             cmap = font.getBestCmap()
+            glyphcount = len(font.getGlyphOrder()) - 1
             if cmap:
-                glyphcount = len(font.getGlyphOrder()) - 1
-                print("  " + (str(glyphcount) + " glyphs;").ljust(14),
-                      "Unicodes mapped:", len(cmap), "out of", len(unicodes))
                 font.flavor = 'woff2'
                 font.save(outfile)
                 writeCssFont(csshandle, fontfamily, outfile, subrange, fontstyle, fontweight)
+                print(("  " if verbose else "") + "Generated", outfile)
+                if verbose:
+                    print("  Found", glyphcount, "glyphs for",
+                          len(cmap), "out of", len(unicodes), "unicodes")
             else:
-                print("  Skipped since no unicodes could be mapped.")
+                if verbose:
+                    print("  Found no glyphs for any of", len(unicodes), "unicodes")
             font.close()
+        print("Generated", cssfile)
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
