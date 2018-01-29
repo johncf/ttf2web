@@ -6,40 +6,51 @@ A python script to export a TTF font for the web.
 
 ```txt
 $ ls
-NotoSansMono-Regular.ttf
+Raleway-Regular.ttf
 
-$ ttf2web.py NotoSansMono-Regular.ttf
-Generating WebFonts...
-assets/NotoSansMono-Regular.cyrillic.woff2
-assets/NotoSansMono-Regular.cyrillic-ext.woff2
-assets/NotoSansMono-Regular.devanagari.woff2
-assets/NotoSansMono-Regular.greek.woff2
-assets/NotoSansMono-Regular.greek-ext.woff2
-assets/NotoSansMono-Regular.latin.woff2
-assets/NotoSansMono-Regular.latin-ext.woff2
-assets/NotoSansMono-Regular.vietnamese.woff2
+$ ttf2web.py -v Raleway-Regular.ttf
+Processing cyrillic
+  Found no glyphs for any of 101 unicodes
+Processing cyrillic-ext
+  Found no glyphs for any of 348 unicodes
+Processing devanagari
+  Found no glyphs for any of 213 unicodes
+Processing greek
+  Generated assets/Raleway-Regular.greek.woff2
+  Found 1 glyphs for 1 out of 144 unicodes
+Processing greek-ext
+  Found no glyphs for any of 256 unicodes
+Processing latin
+  Generated assets/Raleway-Regular.latin.woff2
+  Found 223 glyphs for 218 out of 381 unicodes
+Processing latin-ext
+  Generated assets/Raleway-Regular.latin-ext.woff2
+  Found 156 glyphs for 156 out of 896 unicodes
+Processing vietnamese
+  Generated assets/Raleway-Regular.vietnamese.woff2
+  Found 10 glyphs for 10 out of 95 unicodes
+Generated Raleway-Regular.css
 
 $ ls
-assets  NotoSansMono-Regular.css  NotoSansMono-Regular.ttf
+assets  Raleway-Regular.css  Raleway-Regular.ttf
 
-$ cat NotoSansMono-Regular.css
-/* cyrillic */
+$ head -n 16 Raleway-Regular.css
 @font-face {
-  font-family: "Noto Sans Mono";
-  font-style: "Regular";
-  src: local("Noto Sans Mono"), url(assets/NotoSansMono-Regular.cyrillic.woff2) format("woff2");
-  unicode-range: U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;
+  font-family: "Raleway";
+  font-style: normal;
+  font-weight: 400;
+  src: local("Raleway"), url(assets/Raleway-Regular.greek.woff2) format("woff2");
+  unicode-range: U+0370-03FF;
 }
-
-/* cyrillic-ext */
 @font-face {
-  font-family: "Noto Sans Mono";
-  font-style: "Regular";
-  src: local("Noto Sans Mono"), url(assets/NotoSansMono-Regular.cyrillic-ext.woff2) format("woff2");
-  unicode-range: U+0460-052F,U+1C80-1C88,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F;
+  font-family: "Raleway";
+  font-style: normal;
+  font-weight: 400;
+  src: local("Raleway"), url(assets/Raleway-Regular.latin.woff2) format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2212,U+2215;
 }
-
-...[truncated]
+@font-face {
+  font-family: "Raleway";
 ```
 
 The unicode ranges are defined in [`subsets`](./subsets), which you may edit as needed.
