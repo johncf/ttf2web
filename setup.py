@@ -30,9 +30,6 @@ setup(
     keywords='ttf woff2 webfont converter splitter css',
     py_modules=['ttf2web'],
     install_requires=['fonttools'],
-    package_data={
-        'subsets': ['subsets'],
-    },
     entry_points={
         'console_scripts': [
             'ttf2web=ttf2web:main',

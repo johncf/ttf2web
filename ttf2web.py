@@ -1,28 +1,40 @@
 #!/bin/env python3
 
 import os
-import sys
 from fontTools.ttLib import TTFont
 from fontTools.subset import parse_unicodes, Subsetter
 
-def readSubsetFile(subsetfile):
-    subsets = {}
-    with open(subsetfile, 'r') as subsethandle:
-        for line in subsethandle:
-            subname, subrange = line.split()
-            unicodes = parse_unicodes(subrange)
-            subsets[subname] = (subrange, unicodes)
-    return subsets
+def _intoURDict(uranges):
+    urdict = {}
+    for urname, urange in uranges:
+        unicodes = parse_unicodes(urange)
+        urdict[urname] = (urange, unicodes)
+    return urdict
 
-def getDefaultSubsets():
-    subsetfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'subsets')
-    return readSubsetFile(subsetfile)
+def readURFile(urfile):
+    with open(urfile, 'r') as urhandle:
+        return [line.split() for line in urhandle]
+
+def getDefaultRanges():
+    uranges = [['cyrillic',     'U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116'],
+               ['cyrillic-ext', 'U+0460-052F,U+1C80-1C88,U+20B4,U+2DE0-2DFF,' +
+                                'U+A640-A69F,U+FE2E-FE2F'],
+               ['devanagari',   'U+0900-097F,U+1CD0-1CF6,U+1CF8-1CF9,U+200B-200D,' +
+                                'U+20A8,U+20B9,U+25CC,U+A830-A839,U+A8E0-A8FB'],
+               ['greek',        'U+0370-03FF'],
+               ['greek-ext',    'U+1F00-1FFF'],
+               ['latin',        'U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,' +
+                                'U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2212,U+2215'],
+               ['latin-ext',    'U+0100-024F,U+0259,U+1E00-1EFF,U+20A0-20CF,U+2C60-2C7F,' +
+                                'U+A720-A7FF'],
+               ['vietnamese',   'U+0102-0103,U+0110-0111,U+1EA0-1EF9,U+20AB']]
+    return uranges
 
 class TTF2Web:
-    def __init__(self, fontfile, subsets, assetdir="assets", fontstyle=None, fontweight=None):
+    def __init__(self, fontfile, uranges, assetdir="assets", fontstyle=None, fontweight=None):
         self.fontfile = fontfile
         self.basename = os.path.splitext(os.path.basename(fontfile))[0]
-        self.subsets = subsets
+        self.urdict = _intoURDict(uranges)
         self.assetdir = assetdir
 
         font = TTFont(fontfile, lazy=True)
@@ -58,7 +70,7 @@ class TTF2Web:
     def generateWoff2(self, verbosity=0):
         woff2_list = []
         os.makedirs(self.assetdir, exist_ok=True)
-        for subname, (subrange, unicodes) in self.subsets.items():
+        for subname, (subrange, unicodes) in self.urdict.items():
             if verbosity == 2: print("Processing", subname)
             subs = Subsetter()
             font = TTFont(self.fontfile)
@@ -95,10 +107,10 @@ def main():
                         help="print more details")
     args = parser.parse_args()
     if args.urfile:
-        subsets = readSubsetFile(args.urfile)
+        uranges = readURFile(args.urfile)
     else:
-        subsets = getDefaultSubsets()
-    t2w = TTF2Web(args.fontfile, subsets)
+        uranges = getDefaultRanges()
+    t2w = TTF2Web(args.fontfile, uranges)
     verbosity = 2 if args.verbose else 1
     woff2_list = t2w.generateWoff2(verbosity=verbosity)
     t2w.generateCss(woff2_list, verbosity=verbosity)
