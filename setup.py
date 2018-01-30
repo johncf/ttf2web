@@ -1,6 +1,10 @@
 from setuptools import setup
 from codecs import open
 from os import path
+import sys
+
+if sys.version_info < (3, 4):
+    sys.exit('Sorry, Python < 3.4 is not supported.')
 
 here = path.abspath(path.dirname(__file__))
 
@@ -9,12 +13,13 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='ttf2web',
-    version='0.9.0',
-    description='A sample Python project',
+    version='0.9.3',
+    description='A tool to optimize fonts for web distribution.',
     long_description=long_description,
     url='https://github.com/johncf/ttf2web',
     author='John C F',
     author_email='john.ch.fr@gmail.com',
+    license='MIT',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',

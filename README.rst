@@ -1,12 +1,31 @@
 ttf2web
 =======
 
-A python script to export a TTF font for the web.
+A tool to split/segment a TTF file into multiple WOFF2 files based on Unicode
+character ranges, and generate a CSS file that describes that font face as an
+aggregate of those WOFF2 files.
 
-Usage:
-------
+Installation
+------------
 
-.. code:: txt
+.. code::
+
+    pip install ttf2web
+
+Usage
+-----
+
+.. code::
+
+    ttf2web /path/to/font-file.ttf
+
+This will split ``font-file.ttf`` based on a set of pre-defined Unicode ranges,
+and create (in the working directory) ``font-file.css`` and a directory named
+``assets`` containing the WOFF2 files.
+
+Here's a demo of a more complete example:
+
+.. code::
 
     $ ls
     Raleway-Regular.ttf  unicode-ranges
