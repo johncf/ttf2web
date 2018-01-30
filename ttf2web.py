@@ -32,6 +32,30 @@ def getDefaultRanges():
 
 class TTF2Web:
     def __init__(self, fontfile, uranges, assetdir="assets", fontstyle=None, fontweight=None):
+        """
+        Parameters
+        ----------
+        fontfile : str
+            Path to a ttf file.
+        uranges : [[str]]
+            Array of pairs -- name of the unicode range and the range itself.
+            These will be used to suffix the names of generated woff2 files.
+            E.g. [['greek', 'U+0370-03FF,U+1F00-1FFF'], ['thumbs', 'U+01F44D']]
+                 If   fontfile='/path/to/fontfile.ttf' and assetdir='assets'
+                 then 'assets/fontfile.greek.woff2' and
+                      'assets/fontfile.thumbs.woff2'
+                 will be generated when the generateWoff2 method is called.
+        assetdir : str
+            Path to which woff2 files should be generated.
+        fontstyle : str
+            The CSS3 font-style property. If not specified, an appropriate one
+            will be generated based on the subfamily property[1].
+        fontweight : str
+            The CSS3 font-weight property. If not specified, an appropriate one
+            will be generated based on the subfamily property[1].
+
+        [1]: https://www.microsoft.com/typography/otspec/name.htm#nameIDs
+        """
         self.fontfile = fontfile
         self.basename = os.path.splitext(os.path.basename(fontfile))[0]
         self.urdict = _intoURDict(uranges)
@@ -101,10 +125,14 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("fontfile",
                         help="ttf file to split into woff2 files")
-    parser.add_argument("--unicode-ranges", dest="urfile", default=None,
-                        help="the file containing the desired unicode ranges")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="print more details")
+    parser.add_argument("--unicode-ranges", dest="urfile", default=None,
+                        help="the file specifying the desired unicode ranges. " +
+                             "Each line of the file should contain 2 fields " +
+                             "separated by one or more spaces. The first field " +
+                             "should be a name given to the unicode range " +
+                             "specified in the second field.")
     args = parser.parse_args()
     if args.urfile:
         uranges = readURFile(args.urfile)

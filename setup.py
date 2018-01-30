@@ -9,7 +9,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='ttf2web',
-    version='1.0.0',
+    version='0.9.0',
     description='A sample Python project',
     long_description=long_description,
     url='https://github.com/johncf/ttf2web',
